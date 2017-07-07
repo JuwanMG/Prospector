@@ -62,6 +62,51 @@ public class Prospector : MonoBehaviour {
             cp.SetSortingLayerName(tSD.layerName);
             tableau.Add(cp);
         }
+
+        MoveToTarget(Draw());
+        UpdateDrawPile();
+    }
+
+    void MoveToDiscard(CardProspector cd)
+    {
+        cd.state = CardState.discard;
+        discardPile.Add(cd);
+        cd.transform.parent = layoutAnchor;
+        cd.transform.localPosition = new Vector3(layout.multiplier.x * layout.discardPile.x, layout.multiplier.y * layout.discardPile.y, -layout.discardPile.layerID + 0.5f);
+        cd.faceUP = true;
+        cd.SetSortingLayerName(layout.discardPile.layerName);
+        cd.SetSortOrder(-100 + discardPile.Count);
+    }
+
+    void MoveToTarget(CardProspector cd)
+    {
+        if (target != null)
+        {
+            MoveToDiscard(target);
+        }
+        target = cd;
+        cd.state = CardState.target;
+        cd.transform.parent = layoutAnchor;
+        cd.transform.position = new Vector3(layout.multiplier.x * layout.discardPile.x, layout.multiplier.y * layout.discardPile.y, -layout.discardPile.layerID);
+        cd.faceUP = true;
+        cd.SetSortingLayerName(layout.discardPile.layerName);
+        cd.SetSortOrder(0);
+    }
+
+    void UpdateDrawPile()
+    {
+        CardProspector cd;
+        for(int i = 0; i < drawPile.Count; i++)
+        {
+            cd = drawPile[i];
+            cd.transform.parent = layoutAnchor;
+            Vector2 dpStagger = layout.drawPile.stagger;
+            cd.transform.position = new Vector3(layout.multiplier.x * (layout.drawPile.x + i * dpStagger.x), layout.multiplier.y * (layout.drawPile.y + i * dpStagger.y), -layout.drawPile.layerID + 0.1f * i);
+            cd.faceUP = false;
+            cd.state = CardState.drawpile;
+            cd.SetSortingLayerName(layout.drawPile.layerName);
+            cd.SetSortOrder(-10 * i);
+        }
     }
 
     List<CardProspector> ConvertListCardsToListCardProspectors(List<Card> lCD)
@@ -74,6 +119,24 @@ public class Prospector : MonoBehaviour {
             lCP.Add(tCP);
         }
         return (lCP);
+    }
+
+    public void CardClicked(CardProspector cd)
+    {
+        switch (cd.state)
+        {
+            case CardState.target:
+                break;
+
+            case CardState.drawpile:
+                MoveToDiscard(target);
+                MoveToDiscard(Draw());
+                UpdateDrawPile();
+                break;
+
+            case CardState.tableau:
+                break;
+        }
     }
 
 }
